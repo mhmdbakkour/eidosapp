@@ -5,7 +5,15 @@ import '../providers/node_provider.dart';
 
 class NodeWidget extends ConsumerStatefulWidget {
   final Node node;
-  const NodeWidget({super.key, required this.node});
+  final VoidCallback? onTap;
+  final bool isMenuActive;
+
+  const NodeWidget({
+    super.key,
+    required this.node,
+    this.onTap,
+    this.isMenuActive = false,
+  });
 
   @override
   ConsumerState<NodeWidget> createState() => _NodeWidgetState();
@@ -26,14 +34,18 @@ class _NodeWidgetState extends ConsumerState<NodeWidget> {
       left: localOffset.dx - 30,
       top: localOffset.dy - 30,
       child: GestureDetector(
-        onPanUpdate: (details) {
-          setState(() {
-            localOffset += details.delta;
-          });
-          ref
-              .read(nodeProvider.notifier)
-              .updateNode(widget.node.copyWith(position: localOffset));
-        },
+        onPanUpdate:
+            widget.isMenuActive
+                ? null
+                : (details) {
+                  setState(() {
+                    localOffset += details.delta;
+                  });
+                  ref
+                      .read(nodeProvider.notifier)
+                      .updateNode(widget.node.copyWith(position: localOffset));
+                },
+        onTap: widget.onTap,
         child: Container(
           width: 60,
           height: 60,
