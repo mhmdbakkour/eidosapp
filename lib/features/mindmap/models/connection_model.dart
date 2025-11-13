@@ -9,6 +9,10 @@ class Connection {
     required this.toNodeId,
   });
 
+  static Connection empty() {
+    return Connection(id: '', fromNodeId: '', toNodeId: '');
+  }
+
   Connection copyWith({String? id, String? fromNodeId, String? toNodeId}) {
     return Connection(
       id: id ?? this.id,

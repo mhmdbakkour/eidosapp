@@ -53,6 +53,14 @@ class _MindMapPageState extends ConsumerState<MindMapPage> {
               color: Colors.green,
             ),
           );
+          nodeNotifier.addNode(
+            Node(
+              id: '4',
+              text: 'Node 4',
+              position: const Offset(300, 300),
+              color: Colors.orange,
+            ),
+          );
 
           connectionNotifier.addConnection(
             Connection(id: 'c1', fromNodeId: '1', toNodeId: '2'),

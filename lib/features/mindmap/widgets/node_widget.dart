@@ -29,10 +29,18 @@ class _NodeWidgetState extends ConsumerState<NodeWidget> {
   }
 
   @override
+  void didUpdateWidget(covariant NodeWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.node.id != widget.node.id) {
+      localOffset = widget.node.position;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Positioned(
-      left: localOffset.dx - 30,
-      top: localOffset.dy - 30,
+      left: widget.node.position.dx - 30,
+      top: widget.node.position.dy - 30,
       child: GestureDetector(
         onPanUpdate:
             widget.isMenuActive

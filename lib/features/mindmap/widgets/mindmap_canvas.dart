@@ -1,3 +1,4 @@
+import 'package:csci410project/features/mindmap/models/connection_model.dart';
 import 'package:csci410project/features/mindmap/widgets/radial_menu.dart';
 
 import 'connection_painter.dart';
@@ -22,6 +23,7 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
   Offset _lastFocalPoint = Offset.zero;
 
   Node? selectedNode;
+  Node? _nodeToConnect;
   late AnimationController _menuController;
 
   @override
@@ -49,6 +51,86 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
           });
         }
       });
+    }
+  }
+
+  void _deleteNode(Node node) {
+    ref.read(nodeProvider.notifier).removeNode(node.id);
+
+    final connections = ref.read(connectionProvider);
+    for (var conn
+        in connections
+            .where((c) => c.fromNodeId == node.id || c.toNodeId == node.id)
+            .toList()) {
+      ref.read(connectionProvider.notifier).removeConnection(conn.id);
+    }
+
+    _hideMenu();
+  }
+
+  void _editNode(Node node) async {
+    final newTextController = TextEditingController(text: node.text);
+
+    final newText = await showDialog<String>(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: const Text('Edit Node'),
+            content: TextFormField(
+              autofocus: true,
+              decoration: const InputDecoration(labelText: 'Text'),
+              controller: newTextController,
+              maxLength: 10,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, newTextController.text),
+                child: const Text("Save"),
+              ),
+            ],
+          ),
+    );
+    if (newText != null && newText.isNotEmpty) {
+      ref.read(nodeProvider.notifier).updateNode(node.copyWith(text: newText));
+    }
+
+    _hideMenu();
+  }
+
+  void _startConnect(Node node) {
+    _nodeToConnect = node;
+    _hideMenu();
+  }
+
+  void _onNodeTap(Node tappedNode) {
+    if (_nodeToConnect != null && _nodeToConnect!.id != tappedNode.id) {
+      final connections = ref.read(connectionProvider);
+
+      final existing = connections.firstWhere(
+        (c) =>
+            (c.fromNodeId == _nodeToConnect!.id &&
+                c.toNodeId == tappedNode.id) ||
+            (c.toNodeId == _nodeToConnect!.id && c.toNodeId == tappedNode.id),
+        orElse: () => Connection.empty(),
+      );
+
+      if (existing.id.isNotEmpty) {
+        ref.read(connectionProvider.notifier).removeConnection(existing.id);
+      } else {
+        final newConnection = Connection(
+          id: UniqueKey().toString(),
+          fromNodeId: _nodeToConnect!.id,
+          toNodeId: tappedNode.id,
+        );
+        ref.read(connectionProvider.notifier).addConnection(newConnection);
+      }
+      _nodeToConnect = null;
+    } else {
+      _showMenu(tappedNode);
     }
   }
 
@@ -93,7 +175,7 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
               ...nodes.map(
                 (node) => NodeWidget(
                   node: node,
-                  onTap: () => _showMenu(node),
+                  onTap: () => _onNodeTap(node),
                   isMenuActive: selectedNode != null,
                 ),
               ),
@@ -102,6 +184,9 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
                   node: selectedNode!,
                   controller: _menuController,
                   onDismiss: _hideMenu,
+                  onConnect: () => _startConnect(selectedNode!),
+                  onDelete: () => _deleteNode(selectedNode!),
+                  onEdit: () => _editNode(selectedNode!),
                 ),
             ],
           ),

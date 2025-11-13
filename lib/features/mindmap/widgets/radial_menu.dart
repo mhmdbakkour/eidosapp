@@ -6,12 +6,18 @@ class RadialMenu extends StatelessWidget {
   final Node node;
   final AnimationController controller;
   final VoidCallback onDismiss;
+  final VoidCallback onDelete;
+  final VoidCallback onEdit;
+  final VoidCallback onConnect;
 
   const RadialMenu({
     super.key,
     required this.node,
     required this.controller,
     required this.onDismiss,
+    required this.onDelete,
+    required this.onEdit,
+    required this.onConnect,
   });
 
   @override
@@ -23,9 +29,24 @@ class RadialMenu extends StatelessWidget {
     );
 
     final buttons = [
-      _RadialButton(icon: Icons.link, color: Colors.blue, label: "Connect"),
-      _RadialButton(icon: Icons.edit, color: Colors.green, label: "Edit"),
-      _RadialButton(icon: Icons.delete, color: Colors.red, label: "Delete"),
+      _RadialButton(
+        icon: Icons.link,
+        color: Colors.blue,
+        label: "Connect",
+        onTap: onConnect,
+      ),
+      _RadialButton(
+        icon: Icons.edit,
+        color: Colors.green,
+        label: "Edit",
+        onTap: onEdit,
+      ),
+      _RadialButton(
+        icon: Icons.delete,
+        color: Colors.red,
+        label: "Delete",
+        onTap: onDelete,
+      ),
     ];
 
     return AnimatedBuilder(
@@ -76,12 +97,13 @@ class _RadialButton extends StatelessWidget {
   final IconData icon;
   final Color color;
   final String label;
+  final VoidCallback? onTap;
 
   const _RadialButton({
-    super.key,
     required this.icon,
     required this.color,
     required this.label,
+    required this.onTap,
   });
 
   @override
@@ -91,11 +113,7 @@ class _RadialButton extends StatelessWidget {
       shape: const CircleBorder(),
       elevation: 3,
       child: InkWell(
-        onTap: () {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('$label tapped')));
-        },
+        onTap: onTap,
         customBorder: const CircleBorder(),
         child: SizedBox(
           width: 50,
