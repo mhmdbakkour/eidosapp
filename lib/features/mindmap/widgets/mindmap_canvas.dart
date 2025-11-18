@@ -18,13 +18,10 @@ class MindMapCanvas extends ConsumerStatefulWidget {
 
 class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
     with TickerProviderStateMixin {
-  Offset offset = Offset.zero;
-  double scale = 1.0;
-  Offset _lastFocalPoint = Offset.zero;
-
   Node? selectedNode;
   Node? _nodeToConnect;
   late AnimationController _menuController;
+  late TransformationController _viewportController;
 
   @override
   void initState() {
@@ -33,6 +30,20 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
+    _viewportController = TransformationController();
+
+    // Size of your virtual canvas
+    const canvasSize = Size(50000, 50000);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final screenSize = MediaQuery.of(context).size;
+
+      // Move camera so canvas center appears at screen center
+      final dx = (screenSize.width / 2) - (canvasSize.width / 2);
+      final dy = (screenSize.height / 2) - (canvasSize.height / 2);
+
+      _viewportController.value = Matrix4.identity()..translate(dx, dy);
+    });
   }
 
   void _showMenu(Node node) {
@@ -69,7 +80,7 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
   }
 
   void _editNode(Node node) async {
-    final newTextController = TextEditingController(text: node.text);
+    final editTextController = TextEditingController(text: node.text);
 
     final newText = await showDialog<String>(
       context: context,
@@ -79,7 +90,7 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
             content: TextFormField(
               autofocus: true,
               decoration: const InputDecoration(labelText: 'Text'),
-              controller: newTextController,
+              controller: editTextController,
               maxLength: 10,
             ),
             actions: [
@@ -88,7 +99,8 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
                 child: const Text("Cancel"),
               ),
               TextButton(
-                onPressed: () => Navigator.pop(context, newTextController.text),
+                onPressed:
+                    () => Navigator.pop(context, editTextController.text),
                 child: const Text("Save"),
               ),
             ],
@@ -99,6 +111,7 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
     }
 
     _hideMenu();
+    editTextController.dispose();
   }
 
   void _startConnect(Node node) {
@@ -114,7 +127,7 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
         (c) =>
             (c.fromNodeId == _nodeToConnect!.id &&
                 c.toNodeId == tappedNode.id) ||
-            (c.toNodeId == _nodeToConnect!.id && c.toNodeId == tappedNode.id),
+            (c.toNodeId == _nodeToConnect!.id && c.fromNodeId == tappedNode.id),
         orElse: () => Connection.empty(),
       );
 
@@ -145,28 +158,26 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
     final nodes = ref.watch(nodeProvider);
     final connections = ref.watch(connectionProvider);
 
+    Size canvasSize = Size(50000, 50000);
+
     return GestureDetector(
+      behavior: HitTestBehavior.translucent,
       onTapDown: (_) => _hideMenu(),
-      onScaleStart: (details) {
-        _lastFocalPoint = details.focalPoint;
-      },
-      onScaleUpdate: (details) {
-        setState(() {
-          scale *= details.scale;
-          offset += details.focalPoint - _lastFocalPoint;
-          _lastFocalPoint = details.focalPoint;
-        });
-      },
-      child: ClipRect(
-        child: Transform(
-          transform:
-              Matrix4.identity()
-                ..translate(offset.dx, offset.dy)
-                ..scale(scale),
+      child: InteractiveViewer(
+        transformationController: _viewportController,
+        panEnabled: true,
+        scaleEnabled: true,
+        minScale: 0.2,
+        maxScale: 4,
+        constrained: false,
+        clipBehavior: Clip.none,
+        child: SizedBox(
+          width: canvasSize.width,
+          height: canvasSize.height,
           child: Stack(
+            clipBehavior: Clip.none,
             children: [
               CustomPaint(
-                size: Size.infinite,
                 painter: ConnectionPainter(
                   nodes: nodes,
                   connections: connections,

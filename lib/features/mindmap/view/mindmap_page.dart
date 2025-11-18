@@ -33,7 +33,7 @@ class _MindMapPageState extends ConsumerState<MindMapPage> {
             Node(
               id: '1',
               text: 'Node 1',
-              position: const Offset(100, 100),
+              position: const Offset(25100, 25100),
               color: Colors.blue,
             ),
           );
@@ -41,7 +41,7 @@ class _MindMapPageState extends ConsumerState<MindMapPage> {
             Node(
               id: '2',
               text: 'Node 2',
-              position: const Offset(250, 200),
+              position: const Offset(25250, 25200),
               color: Colors.red,
             ),
           );
@@ -49,7 +49,7 @@ class _MindMapPageState extends ConsumerState<MindMapPage> {
             Node(
               id: '3',
               text: 'Node 3',
-              position: const Offset(150, 175),
+              position: const Offset(25150, 25175),
               color: Colors.green,
             ),
           );
@@ -57,7 +57,7 @@ class _MindMapPageState extends ConsumerState<MindMapPage> {
             Node(
               id: '4',
               text: 'Node 4',
-              position: const Offset(300, 300),
+              position: const Offset(25300, 25300),
               color: Colors.orange,
             ),
           );
