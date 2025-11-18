@@ -43,6 +43,7 @@ class _MindMapPageState extends ConsumerState<MindMapPage> {
               text: 'Node 2',
               position: const Offset(25250, 25200),
               color: Colors.red,
+              shape: BoxShape.rectangle,
             ),
           );
           nodeNotifier.addNode(
@@ -59,6 +60,7 @@ class _MindMapPageState extends ConsumerState<MindMapPage> {
               text: 'Node 4',
               position: const Offset(25300, 25300),
               color: Colors.orange,
+              size: 80.0,
             ),
           );
 
@@ -79,7 +81,11 @@ class _MindMapPageState extends ConsumerState<MindMapPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('MindMap Test')),
+      appBar: AppBar(
+        title: const Text('Eidos'),
+        backgroundColor: Color(0xff1e1e1e),
+        foregroundColor: Colors.white,
+      ),
       body: const MindMapCanvas(),
     );
   }

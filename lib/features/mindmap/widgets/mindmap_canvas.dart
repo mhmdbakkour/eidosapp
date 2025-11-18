@@ -1,4 +1,5 @@
 import 'package:csci410project/features/mindmap/models/connection_model.dart';
+import 'package:csci410project/features/mindmap/widgets/grid_painter.dart';
 import 'package:csci410project/features/mindmap/widgets/radial_menu.dart';
 
 import 'connection_painter.dart';
@@ -21,6 +22,7 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
   Node? selectedNode;
   Node? _nodeToConnect;
   late AnimationController _menuController;
+  late AnimationController _connectionPulseController;
   late TransformationController _viewportController;
 
   @override
@@ -30,6 +32,10 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
+    _connectionPulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat(reverse: true);
     _viewportController = TransformationController();
 
     // Size of your virtual canvas
@@ -150,6 +156,7 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
   @override
   void dispose() {
     _menuController.dispose();
+    _connectionPulseController.dispose();
     super.dispose();
   }
 
@@ -160,49 +167,69 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
 
     Size canvasSize = Size(50000, 50000);
 
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTapDown: (_) => _hideMenu(),
-      child: InteractiveViewer(
-        transformationController: _viewportController,
-        panEnabled: true,
-        scaleEnabled: true,
-        minScale: 0.2,
-        maxScale: 4,
-        constrained: false,
-        clipBehavior: Clip.none,
-        child: SizedBox(
-          width: canvasSize.width,
-          height: canvasSize.height,
-          child: Stack(
+    return Stack(
+      children: [
+        GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTapDown: (_) => _hideMenu(),
+          child: InteractiveViewer(
+            transformationController: _viewportController,
+            panEnabled: true,
+            scaleEnabled: true,
+            minScale: 0.2,
+            maxScale: 4,
+            constrained: false,
             clipBehavior: Clip.none,
-            children: [
-              CustomPaint(
-                painter: ConnectionPainter(
-                  nodes: nodes,
-                  connections: connections,
+            child: SizedBox(
+              width: canvasSize.width,
+              height: canvasSize.height,
+              child: CustomPaint(
+                painter: GridPainter(),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    CustomPaint(
+                      painter: ConnectionPainter(
+                        nodes: nodes,
+                        connections: connections,
+                      ),
+                    ),
+                    ...nodes.map(
+                      (node) => NodeWidget(
+                        node: node,
+                        onTap: () => _onNodeTap(node),
+                        isMenuActive: selectedNode != null,
+                        isConnecting:
+                            _nodeToConnect != null
+                                ? _nodeToConnect!.id == node.id
+                                : false,
+                        pulseAnimation: _connectionPulseController,
+                      ),
+                    ),
+                    if (selectedNode != null)
+                      RadialMenu(
+                        node: selectedNode!,
+                        controller: _menuController,
+                        onDismiss: _hideMenu,
+                        onConnect: () => _startConnect(selectedNode!),
+                        onDelete: () => _deleteNode(selectedNode!),
+                        onEdit: () => _editNode(selectedNode!),
+                      ),
+                  ],
                 ),
               ),
-              ...nodes.map(
-                (node) => NodeWidget(
-                  node: node,
-                  onTap: () => _onNodeTap(node),
-                  isMenuActive: selectedNode != null,
-                ),
-              ),
-              if (selectedNode != null)
-                RadialMenu(
-                  node: selectedNode!,
-                  controller: _menuController,
-                  onDismiss: _hideMenu,
-                  onConnect: () => _startConnect(selectedNode!),
-                  onDelete: () => _deleteNode(selectedNode!),
-                  onEdit: () => _editNode(selectedNode!),
-                ),
-            ],
+            ),
           ),
         ),
-      ),
+        Positioned(
+          top: 10,
+          right: 10,
+          child: IconButton(
+            icon: Icon(Icons.add_circle, size: 30),
+            onPressed: () {},
+          ),
+        ),
+      ],
     );
   }
 }
