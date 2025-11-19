@@ -53,8 +53,8 @@ class _NodeWidgetState extends ConsumerState<NodeWidget> {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      left: widget.node.position.dx - 30,
-      top: widget.node.position.dy - 30,
+      left: widget.node.position.dx - widget.node.size / 2,
+      top: widget.node.position.dy - widget.node.size / 2,
       child: GestureDetector(
         onPanUpdate:
             widget.isMenuActive
@@ -73,7 +73,7 @@ class _NodeWidgetState extends ConsumerState<NodeWidget> {
           builder: (context, child) {
             final scale =
                 widget.isConnecting
-                    ? 1.0 + (_curvedAnimation.value * 0.25)
+                    ? 1.0 + (_curvedAnimation.value * 0.1)
                     : 1.0;
             return Transform.scale(
               scale: scale,
@@ -85,14 +85,22 @@ class _NodeWidgetState extends ConsumerState<NodeWidget> {
                   shape: widget.node.shape,
                   border:
                       widget.isConnecting
-                          ? Border.all(color: Colors.black, width: 2.0)
+                          ? Border.all(color: Colors.black, width: 2)
                           : null,
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   widget.node.text,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize:
+                        widget.node.size > 60
+                            ? 16
+                            : widget.node.size > 40
+                            ? 12
+                            : 8,
+                  ),
                 ),
               ),
             );

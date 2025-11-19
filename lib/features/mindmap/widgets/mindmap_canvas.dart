@@ -1,7 +1,9 @@
 import 'package:csci410project/features/mindmap/models/connection_model.dart';
 import 'package:csci410project/features/mindmap/widgets/grid_painter.dart';
+import 'package:csci410project/features/mindmap/widgets/node_group_widget.dart';
 import 'package:csci410project/features/mindmap/widgets/radial_menu.dart';
 
+import '../dialogs/node_dialog.dart';
 import 'connection_painter.dart';
 import 'node_widget.dart';
 import 'package:flutter/material.dart';
@@ -38,13 +40,11 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
     )..repeat(reverse: true);
     _viewportController = TransformationController();
 
-    // Size of your virtual canvas
     const canvasSize = Size(50000, 50000);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final screenSize = MediaQuery.of(context).size;
 
-      // Move camera so canvas center appears at screen center
       final dx = (screenSize.width / 2) - (canvasSize.width / 2);
       final dy = (screenSize.height / 2) - (canvasSize.height / 2);
 
@@ -71,7 +71,29 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
     }
   }
 
+  void _addNode() async {
+    final newNodeData = await showDialog<Node>(
+      context: context,
+      builder: (_) => const NodeDialog(dialogText: "Create new node"),
+    );
+
+    if (newNodeData != null) {
+      final screenSize = MediaQuery.of(context).size;
+      final invertedMatrix = Matrix4.inverted(_viewportController.value);
+      final canvasCenter = MatrixUtils.transformPoint(
+        invertedMatrix,
+        Offset(screenSize.width / 2, screenSize.height / 2),
+      );
+
+      // Create the final node with the correct position
+      final finalNode = newNodeData.copyWith(position: canvasCenter);
+
+      ref.read(nodeProvider.notifier).addNode(finalNode);
+    }
+  }
+
   void _deleteNode(Node node) {
+    _hideMenu();
     ref.read(nodeProvider.notifier).removeNode(node.id);
 
     final connections = ref.read(connectionProvider);
@@ -81,43 +103,18 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
             .toList()) {
       ref.read(connectionProvider.notifier).removeConnection(conn.id);
     }
-
-    _hideMenu();
   }
 
   void _editNode(Node node) async {
-    final editTextController = TextEditingController(text: node.text);
-
-    final newText = await showDialog<String>(
-      context: context,
-      builder:
-          (_) => AlertDialog(
-            title: const Text('Edit Node'),
-            content: TextFormField(
-              autofocus: true,
-              decoration: const InputDecoration(labelText: 'Text'),
-              controller: editTextController,
-              maxLength: 10,
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Cancel"),
-              ),
-              TextButton(
-                onPressed:
-                    () => Navigator.pop(context, editTextController.text),
-                child: const Text("Save"),
-              ),
-            ],
-          ),
-    );
-    if (newText != null && newText.isNotEmpty) {
-      ref.read(nodeProvider.notifier).updateNode(node.copyWith(text: newText));
-    }
-
     _hideMenu();
-    editTextController.dispose();
+    final editedNode = await showDialog<Node>(
+      context: context,
+      builder: (_) => NodeDialog(dialogText: "Edit node", node: node),
+    );
+
+    if (editedNode != null) {
+      ref.read(nodeProvider.notifier).updateNode(editedNode);
+    }
   }
 
   void _startConnect(Node node) {
@@ -151,6 +148,35 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
     } else {
       _showMenu(tappedNode);
     }
+  }
+
+  void _centerCamera() {
+    final screenSize = MediaQuery.of(context).size;
+    const canvasCenter = Offset(25000, 25000);
+
+    final dx = (screenSize.width / 2) - canvasCenter.dx;
+    final dy = (screenSize.height / 2) - canvasCenter.dy;
+
+    final newMatrix = Matrix4.identity()..translate(dx, dy);
+
+    final animation = Matrix4Tween(
+      begin: _viewportController.value,
+      end: newMatrix,
+    ).animate(
+      CurvedAnimation(parent: _menuController, curve: Curves.easeInOut),
+    );
+
+    void animationListener() {
+      _viewportController.value = animation.value;
+      if (animation.status == AnimationStatus.completed) {
+        animation.removeListener(animationListener);
+      }
+    }
+
+    animation.addListener(animationListener);
+
+    _menuController.reset();
+    _menuController.forward();
   }
 
   @override
@@ -188,6 +214,27 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
+                    NodeGroupWidget(
+                      key: ValueKey("mobile-dev-group"),
+                      title: "Mobile Development",
+                      position: Offset(25000, 25000),
+                      size: Size(600, 400),
+                      color: Colors.blue,
+                    ),
+                    NodeGroupWidget(
+                      key: ValueKey("operating-systems-group"),
+                      title: "Operating Systems",
+                      position: Offset(25600, 25600),
+                      size: Size(600, 600),
+                      color: Colors.purple,
+                    ),
+                    NodeGroupWidget(
+                      key: ValueKey("operating-systems-lab-group"),
+                      title: "Operating Systems Lab",
+                      position: Offset(24500, 25000),
+                      size: Size(300, 500),
+                      color: Colors.green,
+                    ),
                     CustomPaint(
                       painter: ConnectionPainter(
                         nodes: nodes,
@@ -222,11 +269,49 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
           ),
         ),
         Positioned(
-          top: 10,
-          right: 10,
-          child: IconButton(
-            icon: Icon(Icons.add_circle, size: 30),
-            onPressed: () {},
+          top: 25,
+          right: 25,
+          child: Column(
+            children: [
+              FilledButton.icon(
+                icon: Icon(Icons.flip_camera_android),
+                onPressed: _centerCamera,
+                label: Text("Back to origin"),
+                style: FilledButton.styleFrom(
+                  foregroundColor: Colors.greenAccent,
+                  backgroundColor: Color(0xff444444),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Container(
+                width: 50,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(height: 10),
+              FilledButton.icon(
+                icon: Icon(Icons.add_circle),
+                onPressed: _addNode,
+                label: Text("Add Node"),
+                style: FilledButton.styleFrom(
+                  foregroundColor: Colors.greenAccent,
+                  backgroundColor: Color(0xff444444),
+                ),
+              ),
+              const SizedBox(height: 10),
+              FilledButton.icon(
+                icon: Icon(Icons.group_work_sharp),
+                onPressed: () {},
+                label: Text("Add Group"),
+                style: FilledButton.styleFrom(
+                  foregroundColor: Colors.greenAccent,
+                  backgroundColor: Color(0xff444444),
+                ),
+              ),
+            ],
           ),
         ),
       ],

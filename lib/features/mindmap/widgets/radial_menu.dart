@@ -30,20 +30,20 @@ class RadialMenu extends StatelessWidget {
 
     final buttons = [
       _RadialButton(
-        icon: Icons.link,
-        color: Colors.blue,
+        icon: Icon(Icons.link, color: Colors.blueAccent, size: 24),
+        color: Color(0xff444444),
         label: "Connect",
         onTap: onConnect,
       ),
       _RadialButton(
-        icon: Icons.edit,
-        color: Colors.green,
+        icon: Icon(Icons.edit, color: Colors.greenAccent, size: 24),
+        color: Color(0xff444444),
         label: "Edit",
         onTap: onEdit,
       ),
       _RadialButton(
-        icon: Icons.delete,
-        color: Colors.red,
+        icon: Icon(Icons.delete, color: Colors.redAccent, size: 24),
+        color: Color(0xff444444),
         label: "Delete",
         onTap: onDelete,
       ),
@@ -51,7 +51,7 @@ class RadialMenu extends StatelessWidget {
 
     return AnimatedBuilder(
       animation: animation,
-      builder: (_, __) {
+      builder: (_, _) {
         final radius = (90.0 * animation.value).clamp(0.0, 90.0);
 
         return Stack(
@@ -68,9 +68,8 @@ class RadialMenu extends StatelessWidget {
               child: Stack(
                 children: List.generate(buttons.length, (i) {
                   final totalButtons = buttons.length;
-                  final angleStep = Math.pi / (totalButtons); // spread 180°
-                  final angle =
-                      -(Math.pi / 3) + i * angleStep; // start at -90° (up)
+                  final angleStep = Math.pi / (totalButtons);
+                  final angle = -(Math.pi / 3) + i * angleStep;
 
                   final dx = radius * Math.cos(angle);
                   final dy = radius * Math.sin(angle);
@@ -94,7 +93,7 @@ class RadialMenu extends StatelessWidget {
 }
 
 class _RadialButton extends StatelessWidget {
-  final IconData icon;
+  final Icon icon;
   final Color color;
   final String label;
   final VoidCallback? onTap;
@@ -115,11 +114,7 @@ class _RadialButton extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         customBorder: const CircleBorder(),
-        child: SizedBox(
-          width: 50,
-          height: 50,
-          child: Icon(icon, color: Colors.white, size: 24),
-        ),
+        child: SizedBox(width: 50, height: 50, child: icon),
       ),
     );
   }
