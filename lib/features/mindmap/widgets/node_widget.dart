@@ -8,7 +8,6 @@ class NodeWidget extends ConsumerStatefulWidget {
   final VoidCallback? onTap;
   final bool isMenuActive;
   final bool isConnecting;
-  final Animation<double> pulseAnimation;
 
   const NodeWidget({
     super.key,
@@ -16,30 +15,37 @@ class NodeWidget extends ConsumerStatefulWidget {
     this.onTap,
     this.isMenuActive = false,
     this.isConnecting = false,
-    required this.pulseAnimation,
   });
 
   @override
   ConsumerState<NodeWidget> createState() => _NodeWidgetState();
 }
 
-class _NodeWidgetState extends ConsumerState<NodeWidget> {
+class _NodeWidgetState extends ConsumerState<NodeWidget>
+    with SingleTickerProviderStateMixin {
   Offset localOffset = Offset.zero;
 
-  late CurvedAnimation _curvedAnimation = CurvedAnimation(
-    parent: widget.pulseAnimation,
-    curve: Curves.elasticInOut,
-  );
+  late AnimationController _pulseAnimationController;
+  late Animation<double> _curvedAnimation;
 
   @override
   void initState() {
     super.initState();
     localOffset = widget.node.position;
 
+    _pulseAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
     _curvedAnimation = CurvedAnimation(
-      parent: widget.pulseAnimation,
+      parent: _pulseAnimationController,
       curve: Curves.elasticInOut,
     );
+
+    if (widget.isConnecting) {
+      _pulseAnimationController.forward();
+    }
   }
 
   @override
@@ -48,6 +54,21 @@ class _NodeWidgetState extends ConsumerState<NodeWidget> {
     if (oldWidget.node.id != widget.node.id) {
       localOffset = widget.node.position;
     }
+
+    if (widget.isConnecting && !oldWidget.isConnecting) {
+      _pulseAnimationController.repeat(reverse: true);
+    }
+
+    if (!widget.isConnecting && oldWidget.isConnecting) {
+      _pulseAnimationController.stop();
+      _pulseAnimationController.reset();
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulseAnimationController.dispose();
+    super.dispose();
   }
 
   @override
@@ -71,10 +92,7 @@ class _NodeWidgetState extends ConsumerState<NodeWidget> {
         child: AnimatedBuilder(
           animation: _curvedAnimation,
           builder: (context, child) {
-            final scale =
-                widget.isConnecting
-                    ? 1.0 + (_curvedAnimation.value * 0.1)
-                    : 1.0;
+            final scale = 1.0 + (_curvedAnimation.value * 0.1);
             return Transform.scale(
               scale: scale,
               child: Container(

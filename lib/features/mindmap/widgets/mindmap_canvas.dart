@@ -24,7 +24,6 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
   Node? selectedNode;
   Node? _nodeToConnect;
   late AnimationController _menuController;
-  late AnimationController _connectionPulseController;
   late TransformationController _viewportController;
 
   @override
@@ -34,10 +33,6 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
-    _connectionPulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    )..repeat(reverse: true);
     _viewportController = TransformationController();
 
     const canvasSize = Size(50000, 50000);
@@ -182,7 +177,6 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
   @override
   void dispose() {
     _menuController.dispose();
-    _connectionPulseController.dispose();
     super.dispose();
   }
 
@@ -235,12 +229,7 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
                       size: Size(300, 500),
                       color: Colors.green,
                     ),
-                    CustomPaint(
-                      painter: ConnectionPainter(
-                        nodes: nodes,
-                        connections: connections,
-                      ),
-                    ),
+                    AnimatedConnections(nodes: nodes, connections: connections),
                     ...nodes.map(
                       (node) => NodeWidget(
                         node: node,
@@ -250,7 +239,6 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
                             _nodeToConnect != null
                                 ? _nodeToConnect!.id == node.id
                                 : false,
-                        pulseAnimation: _connectionPulseController,
                       ),
                     ),
                     if (selectedNode != null)
