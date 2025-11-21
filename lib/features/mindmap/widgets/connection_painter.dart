@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
-
 import '../models/connection_model.dart';
 import '../models/node_model.dart';
 
