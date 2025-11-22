@@ -11,14 +11,14 @@ class NodeGroupNotifier extends Notifier<List<NodeGroup>> {
     state = [...state, group];
   }
 
-  void updateNode(NodeGroup updated) {
+  void updateNodeGroup(NodeGroup updated) {
     state = [
       for (final g in state)
         if (g.id == updated.id) updated else g,
     ];
   }
 
-  void removeNode(String id) {
+  void removeNodeGroup(String id) {
     state = state.where((g) => g.id != id).toList();
   }
 }

@@ -122,7 +122,7 @@ class _ConnectionPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint =
         Paint()
-          ..color = Colors.grey[700]!
+          ..color = Colors.black
           ..strokeWidth = 2.5
           ..style = PaintingStyle.stroke;
 

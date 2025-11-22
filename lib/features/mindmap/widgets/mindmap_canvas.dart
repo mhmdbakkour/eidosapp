@@ -1,7 +1,11 @@
+import 'package:csci410project/features/mindmap/dialogs/node_group_dialog.dart';
 import 'package:csci410project/features/mindmap/models/connection_model.dart';
+import 'package:csci410project/features/mindmap/models/node_group_model.dart';
+import 'package:csci410project/features/mindmap/providers/node_group_provider.dart';
 import 'package:csci410project/features/mindmap/widgets/grid_painter.dart';
 import 'package:csci410project/features/mindmap/widgets/node_group_widget.dart';
 import 'package:csci410project/features/mindmap/widgets/radial_menu.dart';
+import 'package:uuid/uuid.dart';
 
 import '../dialogs/node_dialog.dart';
 import 'connection_painter.dart';
@@ -87,6 +91,26 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
     }
   }
 
+  void _addNodeGroup() async {
+    final newNodeGroupData = await showDialog<NodeGroup>(
+      context: context,
+      builder: (_) => const NodeGroupDialog(dialogText: "Create new group"),
+    );
+
+    if (newNodeGroupData != null) {
+      final screenSize = MediaQuery.of(context).size;
+      final invertedMatrix = Matrix4.inverted(_viewportController.value);
+      final canvasCenter = MatrixUtils.transformPoint(
+        invertedMatrix,
+        Offset(screenSize.width / 2, screenSize.height / 2),
+      );
+
+      final finalNodeGroup = newNodeGroupData.copyWith(position: canvasCenter);
+
+      ref.read(nodeGroupProvider.notifier).addNodeGroup(finalNodeGroup);
+    }
+  }
+
   void _deleteNode(Node node) {
     _hideMenu();
     ref.read(nodeProvider.notifier).removeNode(node.id);
@@ -100,6 +124,33 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
     }
   }
 
+  void _deleteNodeGroup(NodeGroup nodeGroup) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Group'),
+          content: const Text('Are you sure you want to delete this group?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+              onPressed: () {
+                ref
+                    .read(nodeGroupProvider.notifier)
+                    .removeNodeGroup(nodeGroup.id);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _editNode(Node node) async {
     _hideMenu();
     final editedNode = await showDialog<Node>(
@@ -109,6 +160,19 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
 
     if (editedNode != null) {
       ref.read(nodeProvider.notifier).updateNode(editedNode);
+    }
+  }
+
+  void _editNodeGroup(NodeGroup nodeGroup) async {
+    final editedNodeGroup = await showDialog<NodeGroup>(
+      context: context,
+      builder:
+          (_) =>
+              NodeGroupDialog(dialogText: "Edit group", nodeGroup: nodeGroup),
+    );
+
+    if (editedNodeGroup != null) {
+      ref.read(nodeGroupProvider.notifier).updateNodeGroup(editedNodeGroup);
     }
   }
 
@@ -133,7 +197,7 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
         ref.read(connectionProvider.notifier).removeConnection(existing.id);
       } else {
         final newConnection = Connection(
-          id: UniqueKey().toString(),
+          id: Uuid().v4(),
           fromNodeId: _nodeToConnect!.id,
           toNodeId: tappedNode.id,
         );
@@ -184,6 +248,7 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
   Widget build(BuildContext context) {
     final nodes = ref.watch(nodeProvider);
     final connections = ref.watch(connectionProvider);
+    final groups = ref.watch(nodeGroupProvider);
 
     Size canvasSize = Size(50000, 50000);
 
@@ -208,28 +273,14 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    NodeGroupWidget(
-                      key: ValueKey("mobile-dev-group"),
-                      title: "Mobile Development",
-                      position: Offset(25000, 25000),
-                      size: Size(600, 400),
-                      color: Colors.blue,
-                    ),
-                    NodeGroupWidget(
-                      key: ValueKey("operating-systems-group"),
-                      title: "Operating Systems",
-                      position: Offset(25600, 25600),
-                      size: Size(600, 600),
-                      color: Colors.purple,
-                    ),
-                    NodeGroupWidget(
-                      key: ValueKey("operating-systems-lab-group"),
-                      title: "Operating Systems Lab",
-                      position: Offset(24500, 25000),
-                      size: Size(300, 500),
-                      color: Colors.green,
-                    ),
                     AnimatedConnections(nodes: nodes, connections: connections),
+                    ...groups.map(
+                      (group) => NodeGroupWidget(
+                        nodeGroup: group,
+                        onEdit: () => _editNodeGroup(group),
+                        onDelete: () => _deleteNodeGroup(group),
+                      ),
+                    ),
                     ...nodes.map(
                       (node) => NodeWidget(
                         node: node,
@@ -273,7 +324,7 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
               const SizedBox(height: 10),
               Container(
                 width: 50,
-                height: 5,
+                height: 3,
                 decoration: BoxDecoration(
                   color: Colors.black54,
                   borderRadius: BorderRadius.circular(10),
@@ -292,7 +343,7 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
               const SizedBox(height: 10),
               FilledButton.icon(
                 icon: Icon(Icons.group_work_sharp),
-                onPressed: () {},
+                onPressed: _addNodeGroup,
                 label: Text("Add Group"),
                 style: FilledButton.styleFrom(
                   foregroundColor: Colors.greenAccent,

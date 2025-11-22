@@ -5,7 +5,7 @@ class NodeGroup {
   final Offset position;
   final String title;
   final Color color;
-  final double size;
+  final Size size;
   final BoxShape shape;
 
   const NodeGroup({
@@ -13,7 +13,7 @@ class NodeGroup {
     required this.position,
     this.title = '',
     this.color = Colors.lightBlue,
-    this.size = 60.0,
+    this.size = const Size(60, 60),
     this.shape = BoxShape.circle,
   });
 
@@ -22,7 +22,7 @@ class NodeGroup {
     Offset? position,
     String? text,
     Color? color,
-    double? size,
+    Size? size,
     BoxShape? shape,
   }) {
     return NodeGroup(

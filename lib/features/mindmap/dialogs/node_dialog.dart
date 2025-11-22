@@ -1,7 +1,9 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:uuid/v4.dart';
 
 import '../models/node_model.dart';
+
+import 'package:uuid/uuid.dart';
 
 class NodeDialog extends StatefulWidget {
   final String dialogText;
@@ -27,6 +29,7 @@ class _NodeDialogState extends State<NodeDialog> {
     _selectedShape =
         widget.node?.shape == BoxShape.rectangle ? "Square" : "Circle";
     _selectedColor = widget.node?.color.toString() ?? 'Blue';
+    print(_selectedColor.toString());
   }
 
   @override
@@ -62,7 +65,7 @@ class _NodeDialogState extends State<NodeDialog> {
     }
 
     final newNode = Node(
-      id: widget.node?.id ?? UniqueKey().toString(),
+      id: widget.node?.id ?? Uuid().v4(),
       text: _nodeTextController.text,
       position: widget.node?.position ?? Offset.zero,
       size: double.tryParse(_selectedSize) ?? 60.0,
@@ -81,7 +84,10 @@ class _NodeDialogState extends State<NodeDialog> {
         children: [
           TextFormField(
             autofocus: true,
-            decoration: const InputDecoration(labelText: 'Text'),
+            decoration: const InputDecoration(
+              labelText: 'Text',
+              border: OutlineInputBorder(),
+            ),
             controller: _nodeTextController,
             maxLength: 8,
           ),
@@ -116,7 +122,7 @@ class _NodeDialogState extends State<NodeDialog> {
               DropdownMenuEntry(
                 value: 'Square',
                 label: "Square",
-                leadingIcon: Icon(Icons.square, color: Colors.black12),
+                leadingIcon: Icon(Icons.square_rounded, color: Colors.black12),
               ),
               DropdownMenuEntry(
                 value: 'Circle',
@@ -141,7 +147,9 @@ class _NodeDialogState extends State<NodeDialog> {
                 value: 'Blue',
                 label: "Blue",
                 leadingIcon: Icon(
-                  _selectedShape == "Square" ? Icons.square : Icons.circle,
+                  _selectedShape == "Square"
+                      ? Icons.square_rounded
+                      : Icons.circle,
                   color: Colors.blue,
                 ),
               ),
@@ -149,7 +157,9 @@ class _NodeDialogState extends State<NodeDialog> {
                 value: 'Red',
                 label: "Red",
                 leadingIcon: Icon(
-                  _selectedShape == "Square" ? Icons.square : Icons.circle,
+                  _selectedShape == "Square"
+                      ? Icons.square_rounded
+                      : Icons.circle,
                   color: Colors.red,
                 ),
               ),
@@ -157,7 +167,9 @@ class _NodeDialogState extends State<NodeDialog> {
                 value: 'Orange',
                 label: "Orange",
                 leadingIcon: Icon(
-                  _selectedShape == "Square" ? Icons.square : Icons.circle,
+                  _selectedShape == "Square"
+                      ? Icons.square_rounded
+                      : Icons.circle,
                   color: Colors.orange,
                 ),
               ),
@@ -165,7 +177,9 @@ class _NodeDialogState extends State<NodeDialog> {
                 value: 'Green',
                 label: "Green",
                 leadingIcon: Icon(
-                  _selectedShape == "Square" ? Icons.square : Icons.circle,
+                  _selectedShape == "Square"
+                      ? Icons.square_rounded
+                      : Icons.circle,
                   color: Colors.green,
                 ),
               ),
@@ -173,7 +187,9 @@ class _NodeDialogState extends State<NodeDialog> {
                 value: 'Purple',
                 label: "Purple",
                 leadingIcon: Icon(
-                  _selectedShape == "Square" ? Icons.square : Icons.circle,
+                  _selectedShape == "Square"
+                      ? Icons.square_rounded
+                      : Icons.circle,
                   color: Colors.purple,
                 ),
               ),
@@ -181,7 +197,9 @@ class _NodeDialogState extends State<NodeDialog> {
                 value: 'Yellow',
                 label: "Yellow",
                 leadingIcon: Icon(
-                  _selectedShape == "Square" ? Icons.square : Icons.circle,
+                  _selectedShape == "Square"
+                      ? Icons.square_rounded
+                      : Icons.circle,
                   color: Colors.yellow,
                 ),
               ),
@@ -189,7 +207,9 @@ class _NodeDialogState extends State<NodeDialog> {
                 value: 'Pink',
                 label: "Pink",
                 leadingIcon: Icon(
-                  _selectedShape == "Square" ? Icons.square : Icons.circle,
+                  _selectedShape == "Square"
+                      ? Icons.square_rounded
+                      : Icons.circle,
                   color: Colors.pink,
                 ),
               ),

@@ -101,6 +101,10 @@ class _NodeWidgetState extends ConsumerState<NodeWidget>
                 decoration: BoxDecoration(
                   color: widget.node.color,
                   shape: widget.node.shape,
+                  borderRadius:
+                      widget.node.shape == BoxShape.rectangle
+                          ? BorderRadius.circular(6)
+                          : null,
                   border:
                       widget.isConnecting
                           ? Border.all(color: Colors.black, width: 2)
