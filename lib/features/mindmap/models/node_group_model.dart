@@ -6,7 +6,6 @@ class NodeGroup {
   final String title;
   final Color color;
   final Size size;
-  final BoxShape shape;
 
   const NodeGroup({
     required this.id,
@@ -14,8 +13,11 @@ class NodeGroup {
     this.title = '',
     this.color = Colors.lightBlue,
     this.size = const Size(60, 60),
-    this.shape = BoxShape.circle,
   });
+
+  static NodeGroup empty() {
+    return NodeGroup(id: '', position: Offset.zero);
+  }
 
   NodeGroup copyWith({
     String? id,
@@ -31,7 +33,6 @@ class NodeGroup {
       title: text ?? this.title,
       color: color ?? this.color,
       size: size ?? this.size,
-      shape: shape ?? this.shape,
     );
   }
 }

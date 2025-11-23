@@ -5,13 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/node_group_model.dart';
 
 class NodeGroupWidget extends ConsumerStatefulWidget {
-  final NodeGroup nodeGroup;
+  final String nodeGroupId;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   const NodeGroupWidget({
     super.key,
-    required this.nodeGroup,
+    required this.nodeGroupId,
     required this.onEdit,
     required this.onDelete,
   });
@@ -26,21 +26,35 @@ class _NodeGroupWidgetState extends ConsumerState<NodeGroupWidget> {
   @override
   void initState() {
     super.initState();
-    localOffset = widget.nodeGroup.position;
+    final nodeGroup = ref
+        .read(nodeGroupProvider)
+        .values
+        .firstWhere((g) => g.id == widget.nodeGroupId);
+    localOffset = nodeGroup.position;
   }
 
   @override
   Widget build(BuildContext context) {
+    final nodeGroup = ref
+        .watch(nodeGroupProvider)
+        .values
+        .firstWhere(
+          (g) => g.id == widget.nodeGroupId,
+          orElse: () => NodeGroup.empty(),
+        );
+
+    if (nodeGroup.id.isEmpty) return Container();
+
     return Positioned(
-      left: widget.nodeGroup.position.dx - widget.nodeGroup.size.width / 2,
-      top: widget.nodeGroup.position.dy - widget.nodeGroup.size.height / 2,
+      left: nodeGroup.position.dx - nodeGroup.size.width / 2,
+      top: nodeGroup.position.dy - nodeGroup.size.height / 2,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SizedBox(
-            width: widget.nodeGroup.size.width,
+            width: nodeGroup.size.width,
             child: GestureDetector(
               onPanUpdate: (details) {
                 setState(() {
@@ -48,14 +62,12 @@ class _NodeGroupWidgetState extends ConsumerState<NodeGroupWidget> {
                 });
                 ref
                     .read(nodeGroupProvider.notifier)
-                    .updateNodeGroup(
-                      widget.nodeGroup.copyWith(position: localOffset),
-                    );
+                    .updateNodeGroup(nodeGroup.copyWith(position: localOffset));
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: widget.nodeGroup.color.withAlpha(30),
-                  border: Border.all(color: widget.nodeGroup.color),
+                  color: nodeGroup.color.withAlpha(30),
+                  border: Border.all(color: nodeGroup.color),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Row(
@@ -69,29 +81,27 @@ class _NodeGroupWidgetState extends ConsumerState<NodeGroupWidget> {
                           ref
                               .read(nodeGroupProvider.notifier)
                               .updateNodeGroup(
-                                widget.nodeGroup.copyWith(
-                                  position: localOffset,
-                                ),
+                                nodeGroup.copyWith(position: localOffset),
                               );
                         },
                         child: Center(
                           child: Text(
-                            widget.nodeGroup.title ?? "Group",
+                            nodeGroup.title,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: widget.nodeGroup.color,
+                              color: nodeGroup.color,
                             ),
                           ),
                         ),
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.edit, color: widget.nodeGroup.color),
+                      icon: Icon(Icons.edit, color: nodeGroup.color),
                       onPressed: widget.onEdit,
                     ),
                     IconButton(
-                      icon: Icon(Icons.close, color: widget.nodeGroup.color),
+                      icon: Icon(Icons.close, color: nodeGroup.color),
                       onPressed: widget.onDelete,
                     ),
                   ],
@@ -101,12 +111,12 @@ class _NodeGroupWidgetState extends ConsumerState<NodeGroupWidget> {
           ),
           SizedBox(height: 4),
           Container(
-            width: widget.nodeGroup.size.width,
-            height: widget.nodeGroup.size.height,
+            width: nodeGroup.size.width,
+            height: nodeGroup.size.height,
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: widget.nodeGroup.color.withAlpha(30),
-              border: Border.all(color: widget.nodeGroup.color, width: 2.0),
+              color: nodeGroup.color.withAlpha(30),
+              border: Border.all(color: nodeGroup.color, width: 2.0),
               borderRadius: BorderRadius.circular(10),
             ),
           ),

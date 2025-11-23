@@ -2,9 +2,30 @@ import 'package:csci410project/features/mindmap/view/mindmap_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_theme.dart';
+import 'package:hive/hive.dart';
+import 'package:path_provider/path_provider.dart';
 
-void main() {
+import 'features/mindmap/adapters/connection_adapter.dart';
+import 'features/mindmap/adapters/node_adapter.dart';
+import 'features/mindmap/adapters/node_group_adapter.dart';
+import 'features/mindmap/models/connection_model.dart';
+import 'features/mindmap/models/node_group_model.dart';
+import 'features/mindmap/models/node_model.dart';
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final dir = await getApplicationDocumentsDirectory();
+  Hive.init(dir.path);
+
+  Hive.registerAdapter(NodeAdapter());
+  Hive.registerAdapter(NodeGroupAdapter());
+  Hive.registerAdapter(ConnectionAdapter());
+
+  await Hive.openBox<Node>('nodesBox');
+  await Hive.openBox<NodeGroup>('nodeGroupsBox');
+  await Hive.openBox<Connection>('connectionsBox');
+
   runApp(const ProviderScope(child: EidosApp()));
 }
 

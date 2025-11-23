@@ -21,7 +21,6 @@ class GridPainter extends CustomPainter {
           ..color = Colors.grey.withValues(alpha: 0.55 * 255)
           ..strokeWidth = 1.5;
 
-    // Draw minor grid
     for (double x = 0; x <= size.width; x += minor) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), minorPaint);
     }

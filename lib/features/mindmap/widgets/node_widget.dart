@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/node_model.dart';
 import '../providers/node_provider.dart';
 
 class NodeWidget extends ConsumerStatefulWidget {
-  final Node node;
+  final String nodeId;
   final VoidCallback? onTap;
   final bool isMenuActive;
   final bool isConnecting;
 
   const NodeWidget({
     super.key,
-    required this.node,
+    required this.nodeId,
     this.onTap,
     this.isMenuActive = false,
     this.isConnecting = false,
@@ -31,7 +30,11 @@ class _NodeWidgetState extends ConsumerState<NodeWidget>
   @override
   void initState() {
     super.initState();
-    localOffset = widget.node.position;
+
+    final node = ref.read(nodeProvider)[widget.nodeId];
+    if (node != null) {
+      localOffset = node.position;
+    }
 
     _pulseAnimationController = AnimationController(
       vsync: this,
@@ -51,8 +54,11 @@ class _NodeWidgetState extends ConsumerState<NodeWidget>
   @override
   void didUpdateWidget(covariant NodeWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.node.id != widget.node.id) {
-      localOffset = widget.node.position;
+    if (oldWidget.nodeId != widget.nodeId) {
+      final node = ref.read(nodeProvider)[widget.nodeId];
+      if (node != null) {
+        localOffset = node.position;
+      }
     }
 
     if (widget.isConnecting && !oldWidget.isConnecting) {
@@ -73,9 +79,17 @@ class _NodeWidgetState extends ConsumerState<NodeWidget>
 
   @override
   Widget build(BuildContext context) {
+    final node = ref.watch(
+      nodeProvider.select((nodes) => nodes[widget.nodeId]),
+    );
+
+    if (node == null) {
+      return const SizedBox.shrink();
+    }
+
     return Positioned(
-      left: widget.node.position.dx - widget.node.size / 2,
-      top: widget.node.position.dy - widget.node.size / 2,
+      left: node.position.dx - node.size / 2,
+      top: node.position.dy - node.size / 2,
       child: GestureDetector(
         onPanUpdate:
             widget.isMenuActive
@@ -86,7 +100,7 @@ class _NodeWidgetState extends ConsumerState<NodeWidget>
                   });
                   ref
                       .read(nodeProvider.notifier)
-                      .updateNode(widget.node.copyWith(position: localOffset));
+                      .updateNode(node.copyWith(position: localOffset));
                 },
         onTap: widget.isMenuActive ? null : widget.onTap,
         child: AnimatedBuilder(
@@ -96,13 +110,13 @@ class _NodeWidgetState extends ConsumerState<NodeWidget>
             return Transform.scale(
               scale: scale,
               child: Container(
-                width: widget.node.size,
-                height: widget.node.size,
+                width: node.size,
+                height: node.size,
                 decoration: BoxDecoration(
-                  color: widget.node.color,
-                  shape: widget.node.shape,
+                  color: node.color,
+                  shape: node.shape,
                   borderRadius:
-                      widget.node.shape == BoxShape.rectangle
+                      node.shape == BoxShape.rectangle
                           ? BorderRadius.circular(6)
                           : null,
                   border:
@@ -112,14 +126,14 @@ class _NodeWidgetState extends ConsumerState<NodeWidget>
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  widget.node.text,
+                  node.text,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize:
-                        widget.node.size > 60
+                        node.size > 60
                             ? 16
-                            : widget.node.size > 40
+                            : node.size > 40
                             ? 12
                             : 8,
                   ),

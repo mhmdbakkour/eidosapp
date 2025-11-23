@@ -29,6 +29,7 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
   Node? _nodeToConnect;
   late AnimationController _menuController;
   late TransformationController _viewportController;
+  bool controlsVisible = false;
 
   @override
   void initState() {
@@ -51,7 +52,8 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
     });
   }
 
-  void _showMenu(Node node) {
+  void _showMenu(String nodeId) {
+    final node = ref.read(nodeProvider.select((nodes) => nodes[nodeId]));
     setState(() {
       selectedNode = node;
     });
@@ -84,10 +86,10 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
         Offset(screenSize.width / 2, screenSize.height / 2),
       );
 
-      // Create the final node with the correct position
       final finalNode = newNodeData.copyWith(position: canvasCenter);
 
       ref.read(nodeProvider.notifier).addNode(finalNode);
+      setState(() {});
     }
   }
 
@@ -109,22 +111,29 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
 
       ref.read(nodeGroupProvider.notifier).addNodeGroup(finalNodeGroup);
     }
+    setState(() {});
   }
 
-  void _deleteNode(Node node) {
+  void _deleteNode(String nodeId) {
     _hideMenu();
-    ref.read(nodeProvider.notifier).removeNode(node.id);
+    ref.read(nodeProvider.notifier).removeNode(nodeId);
 
-    final connections = ref.read(connectionProvider);
+    final connections = ref.read(connectionProvider).values.toList();
     for (var conn
         in connections
-            .where((c) => c.fromNodeId == node.id || c.toNodeId == node.id)
+            .where((c) => c.fromNodeId == nodeId || c.toNodeId == nodeId)
             .toList()) {
       ref.read(connectionProvider.notifier).removeConnection(conn.id);
     }
+    setState(() {});
   }
 
-  void _deleteNodeGroup(NodeGroup nodeGroup) {
+  void _deleteNodeGroup(String nodeGroupId) {
+    final nodeGroup = ref
+        .read(nodeGroupProvider)
+        .values
+        .firstWhere((g) => g.id == nodeGroupId);
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -149,6 +158,7 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
         );
       },
     );
+    setState(() {});
   }
 
   void _editNode(Node node) async {
@@ -161,9 +171,16 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
     if (editedNode != null) {
       ref.read(nodeProvider.notifier).updateNode(editedNode);
     }
+
+    setState(() {});
   }
 
-  void _editNodeGroup(NodeGroup nodeGroup) async {
+  void _editNodeGroup(String nodeGroupId) async {
+    final nodeGroup = ref
+        .read(nodeGroupProvider)
+        .values
+        .firstWhere((g) => g.id == nodeGroupId);
+
     final editedNodeGroup = await showDialog<NodeGroup>(
       context: context,
       builder:
@@ -174,6 +191,8 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
     if (editedNodeGroup != null) {
       ref.read(nodeGroupProvider.notifier).updateNodeGroup(editedNodeGroup);
     }
+
+    setState(() {});
   }
 
   void _startConnect(Node node) {
@@ -181,15 +200,15 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
     _hideMenu();
   }
 
-  void _onNodeTap(Node tappedNode) {
-    if (_nodeToConnect != null && _nodeToConnect!.id != tappedNode.id) {
-      final connections = ref.read(connectionProvider);
+  void _onNodeTap(String tappedNodeId) {
+    if (_nodeToConnect != null && _nodeToConnect!.id != tappedNodeId) {
+      final connections = ref.read(connectionProvider).values.toList();
 
       final existing = connections.firstWhere(
         (c) =>
             (c.fromNodeId == _nodeToConnect!.id &&
-                c.toNodeId == tappedNode.id) ||
-            (c.toNodeId == _nodeToConnect!.id && c.fromNodeId == tappedNode.id),
+                c.toNodeId == tappedNodeId) ||
+            (c.toNodeId == _nodeToConnect!.id && c.fromNodeId == tappedNodeId),
         orElse: () => Connection.empty(),
       );
 
@@ -199,14 +218,15 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
         final newConnection = Connection(
           id: Uuid().v4(),
           fromNodeId: _nodeToConnect!.id,
-          toNodeId: tappedNode.id,
+          toNodeId: tappedNodeId,
         );
         ref.read(connectionProvider.notifier).addConnection(newConnection);
       }
       _nodeToConnect = null;
     } else {
-      _showMenu(tappedNode);
+      _showMenu(tappedNodeId);
     }
+    setState(() {});
   }
 
   void _centerCamera() {
@@ -246,9 +266,9 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
 
   @override
   Widget build(BuildContext context) {
-    final nodes = ref.watch(nodeProvider);
-    final connections = ref.watch(connectionProvider);
-    final groups = ref.watch(nodeGroupProvider);
+    final nodeIds = ref.read(nodeProvider).keys.toList();
+    final connectionIds = ref.read(connectionProvider).keys.toList();
+    final nodeGroupIds = ref.read(nodeGroupProvider).keys.toList();
 
     Size canvasSize = Size(50000, 50000);
 
@@ -273,32 +293,33 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    AnimatedConnections(nodes: nodes, connections: connections),
-                    ...groups.map(
-                      (group) => NodeGroupWidget(
-                        nodeGroup: group,
-                        onEdit: () => _editNodeGroup(group),
-                        onDelete: () => _deleteNodeGroup(group),
-                      ),
+                    AnimatedConnections(
+                      nodeIds: nodeIds,
+                      connectionIds: connectionIds,
                     ),
-                    ...nodes.map(
-                      (node) => NodeWidget(
-                        node: node,
-                        onTap: () => _onNodeTap(node),
+                    for (final id in nodeGroupIds)
+                      NodeGroupWidget(
+                        nodeGroupId: id,
+                        onEdit: () => _editNodeGroup(id),
+                        onDelete: () => _deleteNodeGroup(id),
+                      ),
+                    for (final id in nodeIds)
+                      NodeWidget(
+                        nodeId: id,
+                        onTap: () => _onNodeTap(id),
                         isMenuActive: selectedNode != null,
                         isConnecting:
                             _nodeToConnect != null
-                                ? _nodeToConnect!.id == node.id
+                                ? _nodeToConnect!.id == id
                                 : false,
                       ),
-                    ),
                     if (selectedNode != null)
                       RadialMenu(
                         node: selectedNode!,
                         controller: _menuController,
                         onDismiss: _hideMenu,
                         onConnect: () => _startConnect(selectedNode!),
-                        onDelete: () => _deleteNode(selectedNode!),
+                        onDelete: () => _deleteNode(selectedNode!.id),
                         onEdit: () => _editNode(selectedNode!),
                       ),
                   ],
@@ -308,8 +329,19 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
           ),
         ),
         Positioned(
+          child: IconButton(
+            icon: Icon(controlsVisible ? Icons.menu_open : Icons.menu),
+            onPressed:
+                () => setState(() {
+                  controlsVisible = !controlsVisible;
+                }),
+          ),
+        ),
+        AnimatedPositioned(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
           top: 25,
-          right: 25,
+          right: controlsVisible ? 25 : -180,
           child: Column(
             children: [
               FilledButton.icon(

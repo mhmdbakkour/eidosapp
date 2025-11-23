@@ -1,41 +1,45 @@
+import 'package:csci410project/features/mindmap/providers/node_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/connection_model.dart';
 import '../models/node_model.dart';
+import '../providers/connection_provider.dart';
 
-class AnimatedConnections extends StatefulWidget {
-  final List<Node> nodes;
-  final List<Connection> connections;
+class AnimatedConnections extends ConsumerStatefulWidget {
+  final List<String> nodeIds;
+  final List<String> connectionIds;
 
   const AnimatedConnections({
     super.key,
-    required this.nodes,
-    required this.connections,
+    required this.nodeIds,
+    required this.connectionIds,
   });
 
   @override
-  State<AnimatedConnections> createState() => _AnimatedConnectionsState();
+  ConsumerState<AnimatedConnections> createState() =>
+      _AnimatedConnectionsState();
 }
 
-class _AnimatedConnectionsState extends State<AnimatedConnections>
+class _AnimatedConnectionsState extends ConsumerState<AnimatedConnections>
     with TickerProviderStateMixin {
   final Map<String, Animation<double>> _animations = {};
   final Map<String, AnimationController> _animationControllers = {};
-
   final Map<String, Connection> _reversingConnectionsData = {};
 
   @override
   void didUpdateWidget(covariant AnimatedConnections oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    final oldConnectionMap = {for (var c in oldWidget.connections) c.id: c};
-    final newConnectionIds = widget.connections.map((c) => c.id).toSet();
+    final allConnections = ref.read(connectionProvider);
+    final oldConnectionIdsSet = oldWidget.connectionIds.toSet();
+    final newConnectionIdsSet = widget.connectionIds.toSet();
 
-    final addedConnections = widget.connections.where(
-      (c) => !oldConnectionMap.containsKey(c.id),
+    final addedConnectionIds = newConnectionIdsSet.difference(
+      oldConnectionIdsSet,
     );
 
-    for (var connection in addedConnections) {
-      if (!_animationControllers.containsKey(connection.id)) {
+    for (var connectionId in addedConnectionIds) {
+      if (!_animationControllers.containsKey(connectionId)) {
         final controller = AnimationController(
           duration: const Duration(milliseconds: 400),
           vsync: this,
@@ -46,11 +50,11 @@ class _AnimatedConnectionsState extends State<AnimatedConnections>
           curve: Curves.easeOutExpo,
         );
 
-        _animationControllers[connection.id] = controller;
-        _animations[connection.id] = curvedAnimation;
+        _animationControllers[connectionId] = controller;
+        _animations[connectionId] = curvedAnimation;
 
-        if (_reversingConnectionsData.containsKey(connection.id)) {
-          _reversingConnectionsData.remove(connection.id);
+        if (_reversingConnectionsData.containsKey(connectionId)) {
+          _reversingConnectionsData.remove(connectionId);
           controller.forward(from: controller.value);
         } else {
           controller.forward();
@@ -58,15 +62,18 @@ class _AnimatedConnectionsState extends State<AnimatedConnections>
       }
     }
 
-    final removedConnectionIds = oldConnectionMap.keys.where(
-      (id) => !newConnectionIds.contains(id),
+    final removedConnectionIds = oldConnectionIdsSet.difference(
+      newConnectionIdsSet,
     );
 
     for (final connectionId in removedConnectionIds) {
       final controller = _animationControllers[connectionId];
-      final connectionData = oldConnectionMap[connectionId];
+      final connectionData = allConnections.values.firstWhere(
+        (c) => c.id == connectionId,
+        orElse: () => Connection.empty(),
+      );
 
-      if (controller != null && connectionData != null) {
+      if (controller != null && connectionData.id.isNotEmpty) {
         _reversingConnectionsData[connectionId] = connectionData;
 
         controller.reverse().whenComplete(() {
@@ -90,12 +97,22 @@ class _AnimatedConnectionsState extends State<AnimatedConnections>
 
   @override
   Widget build(BuildContext context) {
+    final allNodes = ref.watch(nodeProvider);
+    final relevantNodes =
+        widget.nodeIds.map((id) => allNodes[id]).whereType<Node>().toList();
+
+    final allConnections = ref.watch(connectionProvider);
+    final liveConnections =
+        allConnections.values
+            .where((c) => widget.connectionIds.contains(c.id))
+            .toList();
+
     final repaint = Listenable.merge(_animationControllers.values.toList());
 
     return CustomPaint(
       painter: _ConnectionPainter(
-        nodes: widget.nodes,
-        liveConnections: widget.connections,
+        nodes: relevantNodes,
+        liveConnections: liveConnections,
         reversingConnections: _reversingConnectionsData,
         animations: _animations,
         repaint: repaint,

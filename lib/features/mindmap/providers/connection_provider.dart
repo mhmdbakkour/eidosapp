@@ -1,22 +1,36 @@
+import 'package:hive/hive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/connection_model.dart';
 
-class ConnectionNotifier extends Notifier<List<Connection>> {
+class ConnectionNotifier extends Notifier<Map<String, Connection>> {
+  late final Box<Connection> _box;
+
   @override
-  List<Connection> build() {
-    return [];
+  Map<String, Connection> build() {
+    _box = Hive.box('connectionsBox');
+
+    final loaded = <String, Connection>{};
+    for (final key in _box.keys) {
+      final connection = _box.get(key);
+      if (connection != null) loaded[key as String] = connection;
+    }
+
+    return loaded;
   }
 
-  void addConnection(Connection connection) {
-    state = [...state, connection];
+  Future<void> addConnection(Connection connection) async {
+    state = {...state, connection.id: connection};
+    await _box.put(connection.id, connection);
   }
 
-  void removeConnection(String id) {
-    state = state.where((c) => c.id != id).toList();
+  Future<void> removeConnection(String id) async {
+    final newState = Map<String, Connection>.from(state)..remove(id);
+    state = newState;
+    await _box.delete(id);
   }
 }
 
 final connectionProvider =
-    NotifierProvider<ConnectionNotifier, List<Connection>>(
+    NotifierProvider<ConnectionNotifier, Map<String, Connection>>(
       () => ConnectionNotifier(),
     );

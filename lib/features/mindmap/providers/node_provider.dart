@@ -1,29 +1,40 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive/hive.dart';
 import '../models/node_model.dart';
 
-// Extend Notifier instead of StateNotifier
-class NodeNotifier extends Notifier<List<Node>> {
+class NodeNotifier extends Notifier<Map<String, Node>> {
+  late final Box<Node> _box;
+
   @override
-  List<Node> build() {
-    return [];
+  Map<String, Node> build() {
+    _box = Hive.box<Node>('nodesBox');
+
+    final loaded = <String, Node>{};
+    for (final key in _box.keys) {
+      final node = _box.get(key);
+      if (node != null) loaded[key as String] = node;
+    }
+
+    return loaded;
   }
 
-  void addNode(Node node) {
-    state = [...state, node];
+  Future<void> addNode(Node node) async {
+    state = {...state, node.id: node};
+    await _box.put(node.id, node);
   }
 
-  void updateNode(Node updated) {
-    state = [
-      for (final n in state)
-        if (n.id == updated.id) updated else n,
-    ];
+  Future<void> updateNode(Node updated) async {
+    state = {...state, updated.id: updated};
+    await _box.put(updated.id, updated);
   }
 
-  void removeNode(String id) {
-    state = state.where((n) => n.id != id).toList();
+  Future<void> removeNode(String id) async {
+    final newState = Map<String, Node>.from(state)..remove(id);
+    state = newState;
+    await _box.delete(id);
   }
 }
 
-final nodeProvider = NotifierProvider<NodeNotifier, List<Node>>(
+final nodeProvider = NotifierProvider<NodeNotifier, Map<String, Node>>(
   () => NodeNotifier(),
 );

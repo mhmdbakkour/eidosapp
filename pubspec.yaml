@@ -40,6 +40,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   uuid: ^4.5.2
   flutter_svg: ^2.2.2
+  path_provider: ^2.1.5
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -53,6 +55,10 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
 
+flutter_launcher_icons:
+  android: "launcher_icon"
+  image_path: "assets/EidosLogo.png"
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -65,7 +71,8 @@ flutter:
   uses-material-design: true
 
   assets:
-  - C:\Users\Workspace\StudioProjects\csci410project\lib\assets\Eidos.svg
+  - assets/EidosLogo.png
+  - assets/Eidos.svg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
