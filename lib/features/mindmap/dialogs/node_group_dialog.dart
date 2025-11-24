@@ -25,13 +25,31 @@ class _NodeGroupDialogState extends State<NodeGroupDialog> {
       text: widget.nodeGroup?.title ?? '',
     );
     _nodeGroupWidthController = TextEditingController(
-      text: widget.nodeGroup?.size.width.toString() ?? '100',
+      text: widget.nodeGroup?.size.width.toInt().toString() ?? '100',
     );
     _nodeGroupHeightController = TextEditingController(
-      text: widget.nodeGroup?.size.height.toString() ?? '100',
+      text: widget.nodeGroup?.size.height.toInt().toString() ?? '100',
     );
-    _selectedColor = widget.nodeGroup?.color.toString() ?? 'Blue';
-    print(_selectedColor.toString());
+
+    if (widget.nodeGroup != null) {
+      if (widget.nodeGroup!.color == Colors.red) {
+        _selectedColor = "Red";
+      } else if (widget.nodeGroup!.color == Colors.orange) {
+        _selectedColor = "Orange";
+      } else if (widget.nodeGroup!.color == Colors.green) {
+        _selectedColor = "Green";
+      } else if (widget.nodeGroup!.color == Colors.purple) {
+        _selectedColor = "Purple";
+      } else if (widget.nodeGroup!.color == Colors.yellow) {
+        _selectedColor = "Yellow";
+      } else if (widget.nodeGroup!.color == Colors.pink) {
+        _selectedColor = "Pink";
+      } else {
+        _selectedColor = "Blue";
+      }
+    } else {
+      _selectedColor = "Blue";
+    }
   }
 
   @override
@@ -103,6 +121,7 @@ class _NodeGroupDialogState extends State<NodeGroupDialog> {
                   child: TextFormField(
                     decoration: InputDecoration(
                       labelText: 'Width',
+                      suffixText: "px",
                       border: OutlineInputBorder(),
                     ),
                     controller: _nodeGroupWidthController,
@@ -115,6 +134,7 @@ class _NodeGroupDialogState extends State<NodeGroupDialog> {
                   child: TextFormField(
                     decoration: InputDecoration(
                       labelText: 'Height',
+                      suffixText: "px",
                       border: OutlineInputBorder(),
                     ),
                     controller: _nodeGroupHeightController,

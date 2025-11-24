@@ -27,8 +27,26 @@ class _NodeDialogState extends State<NodeDialog> {
     _selectedSize = widget.node?.size.toInt().toString() ?? '60';
     _selectedShape =
         widget.node?.shape == BoxShape.rectangle ? "Square" : "Circle";
-    _selectedColor = widget.node?.color.toString() ?? 'Blue';
-    print(_selectedColor.toString());
+
+    if (widget.node != null) {
+      if (widget.node!.color == Colors.red) {
+        _selectedColor = "Red";
+      } else if (widget.node!.color == Colors.orange) {
+        _selectedColor = "Orange";
+      } else if (widget.node!.color == Colors.green) {
+        _selectedColor = "Green";
+      } else if (widget.node!.color == Colors.purple) {
+        _selectedColor = "Purple";
+      } else if (widget.node!.color == Colors.yellow) {
+        _selectedColor = "Yellow";
+      } else if (widget.node!.color == Colors.pink) {
+        _selectedColor = "Pink";
+      } else {
+        _selectedColor = "Blue";
+      }
+    } else {
+      _selectedColor = "Blue";
+    }
   }
 
   @override
