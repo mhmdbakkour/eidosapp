@@ -1,7 +1,7 @@
+import 'package:csci410project/features/mindmap/providers/theme_provider.dart';
 import 'package:csci410project/features/mindmap/view/mindmap_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'core/theme/app_theme.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -29,15 +29,18 @@ Future<void> main() async {
   runApp(const ProviderScope(child: EidosApp()));
 }
 
-class EidosApp extends StatelessWidget {
+class EidosApp extends ConsumerWidget {
   const EidosApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeProvider);
+
     return MaterialApp(
       title: 'Eidos',
+      theme: ThemeData.light(),
+      themeMode: themeMode,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
       home: const MindMapPage(),
     );
   }

@@ -37,8 +37,6 @@ class _NodeDialogState extends State<NodeDialog> {
         _selectedColor = "Green";
       } else if (widget.node!.color == Colors.purple) {
         _selectedColor = "Purple";
-      } else if (widget.node!.color == Colors.yellow) {
-        _selectedColor = "Yellow";
       } else if (widget.node!.color == Colors.pink) {
         _selectedColor = "Pink";
       } else {
@@ -70,9 +68,6 @@ class _NodeDialogState extends State<NodeDialog> {
         break;
       case "Purple":
         savedColor = Colors.purple;
-        break;
-      case "Yellow":
-        savedColor = Colors.yellow;
         break;
       case "Pink":
         savedColor = Colors.pink;
@@ -213,16 +208,6 @@ class _NodeDialogState extends State<NodeDialog> {
                         ? Icons.square_rounded
                         : Icons.circle,
                     color: Colors.purple,
-                  ),
-                ),
-                DropdownMenuEntry(
-                  value: 'Yellow',
-                  label: "Yellow",
-                  leadingIcon: Icon(
-                    _selectedShape == "Square"
-                        ? Icons.square_rounded
-                        : Icons.circle,
-                    color: Colors.yellow,
                   ),
                 ),
                 DropdownMenuEntry(

@@ -1,18 +1,20 @@
 import 'package:csci410project/features/mindmap/models/node_group_model.dart';
+import 'package:csci410project/features/mindmap/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
-class NodeGroupDialog extends StatefulWidget {
+class NodeGroupDialog extends ConsumerStatefulWidget {
   final String dialogText;
   final NodeGroup? nodeGroup;
 
   const NodeGroupDialog({super.key, required this.dialogText, this.nodeGroup});
 
   @override
-  State<NodeGroupDialog> createState() => _NodeGroupDialogState();
+  ConsumerState<NodeGroupDialog> createState() => _NodeGroupDialogState();
 }
 
-class _NodeGroupDialogState extends State<NodeGroupDialog> {
+class _NodeGroupDialogState extends ConsumerState<NodeGroupDialog> {
   late TextEditingController _nodeGroupTitleController;
   late TextEditingController _nodeGroupWidthController;
   late TextEditingController _nodeGroupHeightController;
@@ -25,14 +27,17 @@ class _NodeGroupDialogState extends State<NodeGroupDialog> {
       text: widget.nodeGroup?.title ?? '',
     );
     _nodeGroupWidthController = TextEditingController(
-      text: widget.nodeGroup?.size.width.toInt().toString() ?? '100',
+      text: widget.nodeGroup?.size.width.toInt().toString() ?? '300',
     );
     _nodeGroupHeightController = TextEditingController(
-      text: widget.nodeGroup?.size.height.toInt().toString() ?? '100',
+      text: widget.nodeGroup?.size.height.toInt().toString() ?? '300',
     );
 
     if (widget.nodeGroup != null) {
-      if (widget.nodeGroup!.color == Colors.red) {
+      if (widget.nodeGroup!.color == Colors.black ||
+          widget.nodeGroup!.color == Colors.white) {
+        _selectedColor = "Contrast";
+      } else if (widget.nodeGroup!.color == Colors.red) {
         _selectedColor = "Red";
       } else if (widget.nodeGroup!.color == Colors.orange) {
         _selectedColor = "Orange";
@@ -40,8 +45,6 @@ class _NodeGroupDialogState extends State<NodeGroupDialog> {
         _selectedColor = "Green";
       } else if (widget.nodeGroup!.color == Colors.purple) {
         _selectedColor = "Purple";
-      } else if (widget.nodeGroup!.color == Colors.yellow) {
-        _selectedColor = "Yellow";
       } else if (widget.nodeGroup!.color == Colors.pink) {
         _selectedColor = "Pink";
       } else {
@@ -61,7 +64,12 @@ class _NodeGroupDialogState extends State<NodeGroupDialog> {
   void _onSave() {
     final Color savedColor;
 
+    final bool isDarkMode = ref.read(themeProvider) == ThemeMode.dark;
+
     switch (_selectedColor) {
+      case "Contrast":
+        savedColor = isDarkMode ? Colors.white : Colors.black;
+        break;
       case "Red":
         savedColor = Colors.red;
         break;
@@ -73,9 +81,6 @@ class _NodeGroupDialogState extends State<NodeGroupDialog> {
         break;
       case "Purple":
         savedColor = Colors.purple;
-        break;
-      case "Yellow":
-        savedColor = Colors.yellow.shade700;
         break;
       case "Pink":
         savedColor = Colors.pink;
@@ -99,6 +104,8 @@ class _NodeGroupDialogState extends State<NodeGroupDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDarkMode = ref.watch(themeProvider) == ThemeMode.dark;
+
     return AlertDialog(
       title: Text(widget.dialogText),
       content: SingleChildScrollView(
@@ -182,17 +189,17 @@ class _NodeGroupDialogState extends State<NodeGroupDialog> {
                   leadingIcon: Icon(Icons.square_rounded, color: Colors.purple),
                 ),
                 DropdownMenuEntry(
-                  value: 'Yellow',
-                  label: "Yellow",
-                  leadingIcon: Icon(
-                    Icons.square_rounded,
-                    color: Colors.yellow.shade700,
-                  ),
-                ),
-                DropdownMenuEntry(
                   value: 'Pink',
                   label: "Pink",
                   leadingIcon: Icon(Icons.square_rounded, color: Colors.pink),
+                ),
+                DropdownMenuEntry(
+                  value: 'Contrast',
+                  label: "Contrast",
+                  leadingIcon: Icon(
+                    Icons.square_rounded,
+                    color: isDarkMode ? Colors.white : Colors.black,
+                  ),
                 ),
               ],
             ),

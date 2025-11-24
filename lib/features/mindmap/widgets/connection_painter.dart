@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/connection_model.dart';
 import '../models/node_model.dart';
 import '../providers/connection_provider.dart';
+import '../providers/theme_provider.dart';
 
 class AnimatedConnections extends ConsumerStatefulWidget {
   final List<String> nodeIds;
@@ -107,6 +108,8 @@ class _AnimatedConnectionsState extends ConsumerState<AnimatedConnections>
             .where((c) => widget.connectionIds.contains(c.id))
             .toList();
 
+    final bool isDarkMode = ref.watch(themeProvider) == ThemeMode.dark;
+
     final repaint = Listenable.merge(_animationControllers.values.toList());
 
     return CustomPaint(
@@ -116,6 +119,7 @@ class _AnimatedConnectionsState extends ConsumerState<AnimatedConnections>
         reversingConnections: _reversingConnectionsData,
         animations: _animations,
         repaint: repaint,
+        isDarkMode: isDarkMode,
       ),
     );
   }
@@ -126,6 +130,7 @@ class _ConnectionPainter extends CustomPainter {
   final List<Connection> liveConnections;
   final Map<String, Connection> reversingConnections;
   final Map<String, Animation<double>> animations;
+  final bool isDarkMode;
 
   _ConnectionPainter({
     required this.nodes,
@@ -133,13 +138,14 @@ class _ConnectionPainter extends CustomPainter {
     required this.reversingConnections,
     required this.animations,
     required Listenable repaint,
+    this.isDarkMode = false,
   }) : super(repaint: repaint);
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint =
         Paint()
-          ..color = Colors.black
+          ..color = isDarkMode ? Color(0xffdfdfdf) : Colors.black
           ..strokeWidth = 2.5
           ..style = PaintingStyle.stroke;
 

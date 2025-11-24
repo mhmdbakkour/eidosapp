@@ -2,6 +2,7 @@ import 'package:csci410project/features/mindmap/dialogs/node_group_dialog.dart';
 import 'package:csci410project/features/mindmap/models/connection_model.dart';
 import 'package:csci410project/features/mindmap/models/node_group_model.dart';
 import 'package:csci410project/features/mindmap/providers/node_group_provider.dart';
+import 'package:csci410project/features/mindmap/providers/theme_provider.dart';
 import 'package:csci410project/features/mindmap/widgets/grid_painter.dart';
 import 'package:csci410project/features/mindmap/widgets/node_group_widget.dart';
 import 'package:csci410project/features/mindmap/widgets/radial_menu.dart';
@@ -269,123 +270,130 @@ class _MindMapCanvasState extends ConsumerState<MindMapCanvas>
     final nodeIds = ref.read(nodeProvider).keys.toList();
     final connectionIds = ref.read(connectionProvider).keys.toList();
     final nodeGroupIds = ref.read(nodeGroupProvider).keys.toList();
+    final bool isDarkMode = ref.watch(themeProvider) == ThemeMode.dark;
 
     Size canvasSize = Size(50000, 50000);
 
-    return Stack(
-      children: [
-        GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTapDown: (_) => _hideMenu(),
-          child: InteractiveViewer(
-            transformationController: _viewportController,
-            panEnabled: true,
-            scaleEnabled: true,
-            minScale: 0.2,
-            maxScale: 4,
-            constrained: false,
-            clipBehavior: Clip.none,
-            child: SizedBox(
-              width: canvasSize.width,
-              height: canvasSize.height,
-              child: CustomPaint(
-                painter: GridPainter(),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    AnimatedConnections(
-                      nodeIds: nodeIds,
-                      connectionIds: connectionIds,
-                    ),
-                    for (final id in nodeGroupIds)
-                      NodeGroupWidget(
-                        nodeGroupId: id,
-                        onEdit: () => _editNodeGroup(id),
-                        onDelete: () => _deleteNodeGroup(id),
+    return Container(
+      color: isDarkMode ? Color(0xff1e1e1e) : Color(0xffdfdfdf),
+      child: Stack(
+        children: [
+          GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTapDown: (_) => _hideMenu(),
+            child: InteractiveViewer(
+              transformationController: _viewportController,
+              panEnabled: true,
+              scaleEnabled: true,
+              minScale: 0.2,
+              maxScale: 4,
+              constrained: false,
+              clipBehavior: Clip.none,
+              child: SizedBox(
+                width: canvasSize.width,
+                height: canvasSize.height,
+                child: CustomPaint(
+                  painter: GridPainter(),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      AnimatedConnections(
+                        nodeIds: nodeIds,
+                        connectionIds: connectionIds,
                       ),
-                    for (final id in nodeIds)
-                      NodeWidget(
-                        nodeId: id,
-                        onTap: () => _onNodeTap(id),
-                        isMenuActive: selectedNode != null,
-                        isConnecting:
-                            _nodeToConnect != null
-                                ? _nodeToConnect!.id == id
-                                : false,
-                      ),
-                    if (selectedNode != null)
-                      RadialMenu(
-                        node: selectedNode!,
-                        controller: _menuController,
-                        onDismiss: _hideMenu,
-                        onConnect: () => _startConnect(selectedNode!),
-                        onDelete: () => _deleteNode(selectedNode!.id),
-                        onEdit: () => _editNode(selectedNode!),
-                      ),
-                  ],
+                      for (final id in nodeGroupIds)
+                        NodeGroupWidget(
+                          nodeGroupId: id,
+                          onEdit: () => _editNodeGroup(id),
+                          onDelete: () => _deleteNodeGroup(id),
+                        ),
+                      for (final id in nodeIds)
+                        NodeWidget(
+                          nodeId: id,
+                          onTap: () => _onNodeTap(id),
+                          isMenuActive: selectedNode != null,
+                          isConnecting:
+                              _nodeToConnect != null
+                                  ? _nodeToConnect!.id == id
+                                  : false,
+                        ),
+                      if (selectedNode != null)
+                        RadialMenu(
+                          node: selectedNode!,
+                          controller: _menuController,
+                          onDismiss: _hideMenu,
+                          onConnect: () => _startConnect(selectedNode!),
+                          onDelete: () => _deleteNode(selectedNode!.id),
+                          onEdit: () => _editNode(selectedNode!),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        Positioned(
-          child: IconButton(
-            icon: Icon(controlsVisible ? Icons.menu_open : Icons.menu),
-            onPressed:
-                () => setState(() {
-                  controlsVisible = !controlsVisible;
-                }),
+          Positioned(
+            child: IconButton(
+              icon: Icon(
+                controlsVisible ? Icons.menu_open : Icons.menu,
+                color: isDarkMode ? Colors.white : null,
+              ),
+              onPressed:
+                  () => setState(() {
+                    controlsVisible = !controlsVisible;
+                  }),
+            ),
           ),
-        ),
-        AnimatedPositioned(
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeInOut,
-          top: 25,
-          right: controlsVisible ? 25 : -180,
-          child: Column(
-            children: [
-              FilledButton.icon(
-                icon: Icon(Icons.flip_camera_android),
-                onPressed: _centerCamera,
-                label: Text("Back to origin"),
-                style: FilledButton.styleFrom(
-                  foregroundColor: Colors.greenAccent,
-                  backgroundColor: Color(0xff444444),
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            top: 25,
+            right: controlsVisible ? 25 : -180,
+            child: Column(
+              children: [
+                FilledButton.icon(
+                  icon: Icon(Icons.flip_camera_android),
+                  onPressed: _centerCamera,
+                  label: Text("Back to origin"),
+                  style: FilledButton.styleFrom(
+                    foregroundColor: Colors.greenAccent,
+                    backgroundColor: Color(0xff444444),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              Container(
-                width: 50,
-                height: 3,
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(10),
+                const SizedBox(height: 10),
+                Container(
+                  width: 50,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.white : Colors.black54,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              FilledButton.icon(
-                icon: Icon(Icons.add_circle),
-                onPressed: _addNode,
-                label: Text("Add Node"),
-                style: FilledButton.styleFrom(
-                  foregroundColor: Colors.greenAccent,
-                  backgroundColor: Color(0xff444444),
+                const SizedBox(height: 10),
+                FilledButton.icon(
+                  icon: Icon(Icons.add_circle),
+                  onPressed: _addNode,
+                  label: Text("Add Node"),
+                  style: FilledButton.styleFrom(
+                    foregroundColor: Colors.greenAccent,
+                    backgroundColor: Color(0xff444444),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              FilledButton.icon(
-                icon: Icon(Icons.group_work_sharp),
-                onPressed: _addNodeGroup,
-                label: Text("Add Group"),
-                style: FilledButton.styleFrom(
-                  foregroundColor: Colors.greenAccent,
-                  backgroundColor: Color(0xff444444),
+                const SizedBox(height: 10),
+                FilledButton.icon(
+                  icon: Icon(Icons.group_work_sharp),
+                  onPressed: _addNodeGroup,
+                  label: Text("Add Group"),
+                  style: FilledButton.styleFrom(
+                    foregroundColor: Colors.greenAccent,
+                    backgroundColor: Color(0xff444444),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

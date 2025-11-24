@@ -1,3 +1,4 @@
+import 'package:csci410project/features/mindmap/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/node_provider.dart';
@@ -83,6 +84,8 @@ class _NodeWidgetState extends ConsumerState<NodeWidget>
       nodeProvider.select((nodes) => nodes[widget.nodeId]),
     );
 
+    final bool isDarkMode = ref.watch(themeProvider) == ThemeMode.dark;
+
     if (node == null) {
       return const SizedBox.shrink();
     }
@@ -120,9 +123,14 @@ class _NodeWidgetState extends ConsumerState<NodeWidget>
                           ? BorderRadius.circular(6)
                           : null,
                   border:
-                      widget.isConnecting
-                          ? Border.all(color: Colors.black, width: 2)
-                          : null,
+                      isDarkMode
+                          ? widget.isConnecting
+                              ? Border.all(color: Colors.white, width: 2)
+                              : null
+                          : Border.all(
+                            color: Colors.black,
+                            width: widget.isConnecting ? 2 : 1,
+                          ),
                 ),
                 alignment: Alignment.center,
                 child: Text(
@@ -134,7 +142,7 @@ class _NodeWidgetState extends ConsumerState<NodeWidget>
                         node.size > 60
                             ? 16
                             : node.size > 40
-                            ? 12
+                            ? 10
                             : 8,
                   ),
                 ),

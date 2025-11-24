@@ -1,4 +1,5 @@
 import 'package:csci410project/features/mindmap/providers/node_group_provider.dart';
+import 'package:csci410project/features/mindmap/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -43,6 +44,8 @@ class _NodeGroupWidgetState extends ConsumerState<NodeGroupWidget> {
           orElse: () => NodeGroup.empty(),
         );
 
+    final bool isDarkMode = ref.watch(themeProvider) == ThemeMode.dark;
+
     if (nodeGroup.id.isEmpty) return Container();
 
     return Positioned(
@@ -66,8 +69,28 @@ class _NodeGroupWidgetState extends ConsumerState<NodeGroupWidget> {
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: nodeGroup.color.withAlpha(30),
-                  border: Border.all(color: nodeGroup.color),
+                  color:
+                      isDarkMode
+                          ? nodeGroup.color == Colors.black
+                              ? Colors.white.withAlpha(30)
+                              : nodeGroup.color.withAlpha(30)
+                          : nodeGroup.color == Colors.white
+                          ? Colors.black.withAlpha(60)
+                          : Color.lerp(
+                            nodeGroup.color.withAlpha(60),
+                            Colors.black,
+                            0.25,
+                          )!,
+                  border: Border.all(
+                    color:
+                        isDarkMode
+                            ? nodeGroup.color == Colors.black
+                                ? Colors.white
+                                : nodeGroup.color
+                            : nodeGroup.color == Colors.white
+                            ? Colors.black
+                            : Color.lerp(nodeGroup.color, Colors.black, 0.25)!,
+                  ),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Row(
@@ -90,18 +113,57 @@ class _NodeGroupWidgetState extends ConsumerState<NodeGroupWidget> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: nodeGroup.color,
+                              color:
+                                  isDarkMode
+                                      ? nodeGroup.color == Colors.black
+                                          ? Colors.white
+                                          : nodeGroup.color
+                                      : nodeGroup.color == Colors.white
+                                      ? Colors.black
+                                      : Color.lerp(
+                                        nodeGroup.color,
+                                        Colors.black,
+                                        0.25,
+                                      )!,
                             ),
                           ),
                         ),
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.edit, color: nodeGroup.color),
+                      icon: Icon(
+                        Icons.edit,
+                        color:
+                            isDarkMode
+                                ? nodeGroup.color == Colors.black
+                                    ? Colors.white
+                                    : nodeGroup.color
+                                : nodeGroup.color == Colors.white
+                                ? Colors.black
+                                : Color.lerp(
+                                  nodeGroup.color,
+                                  Colors.black,
+                                  0.25,
+                                )!,
+                      ),
                       onPressed: widget.onEdit,
                     ),
                     IconButton(
-                      icon: Icon(Icons.close, color: nodeGroup.color),
+                      icon: Icon(
+                        Icons.close,
+                        color:
+                            isDarkMode
+                                ? nodeGroup.color == Colors.black
+                                    ? Colors.white
+                                    : nodeGroup.color
+                                : nodeGroup.color == Colors.white
+                                ? Colors.black
+                                : Color.lerp(
+                                  nodeGroup.color,
+                                  Colors.black,
+                                  0.25,
+                                )!,
+                      ),
                       onPressed: widget.onDelete,
                     ),
                   ],
@@ -115,8 +177,29 @@ class _NodeGroupWidgetState extends ConsumerState<NodeGroupWidget> {
             height: nodeGroup.size.height,
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: nodeGroup.color.withAlpha(30),
-              border: Border.all(color: nodeGroup.color, width: 2.0),
+              color:
+                  isDarkMode
+                      ? nodeGroup.color == Colors.black
+                          ? Colors.white.withAlpha(30)
+                          : nodeGroup.color.withAlpha(30)
+                      : nodeGroup.color == Colors.white
+                      ? Colors.black.withAlpha(60)
+                      : Color.lerp(
+                        nodeGroup.color.withAlpha(60),
+                        Colors.black,
+                        0.25,
+                      )!,
+              border: Border.all(
+                color:
+                    isDarkMode
+                        ? nodeGroup.color == Colors.black
+                            ? Colors.white
+                            : nodeGroup.color
+                        : nodeGroup.color == Colors.white
+                        ? Colors.black
+                        : Color.lerp(nodeGroup.color, Colors.black, 0.25)!,
+                width: 2.0,
+              ),
               borderRadius: BorderRadius.circular(10),
             ),
           ),
