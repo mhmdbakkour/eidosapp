@@ -1,8 +1,9 @@
 import 'package:csci410project/features/mindmap/providers/theme_provider.dart';
 import 'package:csci410project/features/mindmap/view/mindmap_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'features/mindmap/adapters/connection_adapter.dart';
@@ -15,8 +16,12 @@ import 'features/mindmap/models/node_model.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final dir = await getApplicationDocumentsDirectory();
-  Hive.init(dir.path);
+  if (kIsWeb) {
+    await Hive.initFlutter();
+  } else {
+    final dir = await getApplicationDocumentsDirectory();
+    Hive.init(dir.path);
+  }
 
   Hive.registerAdapter(NodeAdapter());
   Hive.registerAdapter(NodeGroupAdapter());
